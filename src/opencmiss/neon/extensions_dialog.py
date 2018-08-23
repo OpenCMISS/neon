@@ -2,8 +2,8 @@ import os
 
 from PySide2.QtCore import Qt
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QTreeView, QTreeWidgetItem, \
-    QTreeWidgetItemIterator
+from PySide2.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QTreeWidgetItem, \
+    QTreeWidgetItemIterator, QTreeWidget
 
 
 class ExtensionsDialog(QDialog):
@@ -28,15 +28,9 @@ class ExtensionsDialog(QDialog):
         button_box.accepted.connect(self.accept)
 
     def _database_to_tree_view(self, database):
-        tree_widget = self.findChild(QTreeView, '_treeWidgetExtensions')
+        tree_widget = self.findChild(QTreeWidget, '_treeWidgetExtensions')
         # Transform database to a more convenient form.
-        convenient_database = {}
-        for key in database:
-            p, m = key.rsplit('.', 1)
-            if p in convenient_database:
-                convenient_database[p].append((m, database[key]))
-            else:
-                convenient_database[p] = [(m, database[key])]
+        convenient_database = _convert_database(database)
 
         # Now keys in convenient database are tree branches, with a list of leaves that hold the state of the extension.
         tree_widget.setColumnCount(1)
@@ -51,7 +45,7 @@ class ExtensionsDialog(QDialog):
                 child_item.setCheckState(0, Qt.Checked if extension_tuple[1] else Qt.Unchecked)
 
     def _tree_view_to_database(self):
-        tree_widget = self.findChild(QTreeView, '_treeWidgetExtensions')
+        tree_widget = self.findChild(QTreeWidget, '_treeWidgetExtensions')
         database = {}
         it = QTreeWidgetItemIterator(tree_widget)
         while it.value():
@@ -69,3 +63,36 @@ class ExtensionsDialog(QDialog):
 
     def get_database(self):
         return self._tree_view_to_database()
+
+    def set_available_extensions(self, available_extensions):
+        convenient_extensions = _convert_extensions(available_extensions)
+        tree_widget = self.findChild(QTreeWidget, '_treeWidgetExtensions')
+        it = QTreeWidgetItemIterator(tree_widget)
+        while it.value():
+            item = it.value()
+            if item is not None and item.parent() is not None:
+                if [item.parent().text(0), item.text(0)] not in convenient_extensions:
+                    item.setCheckState(0, Qt.Unchecked)
+                    item.setDisabled(True)
+
+            it += 1
+
+def _convert_database(database):
+    """
+    Transforms a Neon database into a more convenient form for putting into a tree widget.
+    :param database: The Neon database to convert.
+    :return: Convenient form of the database.
+    """
+    convenient_database = {}
+    for key in database:
+        p, m = key.rsplit('.', 1)
+        if p in convenient_database:
+            convenient_database[p].append((m, database[key]))
+        else:
+            convenient_database[p] = [(m, database[key])]
+
+    return convenient_database
+
+def _convert_extensions(extensions):
+    converted_extensions = [extension[0].rsplit('.', 1) for extension in extensions]
+    return converted_extensions

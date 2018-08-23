@@ -164,6 +164,7 @@ class MainWindow(QMainWindow):
         extension_manager = self._model.get_extension_manager()
         e_dlg = ExtensionsDialog(self)
         e_dlg.set_database(extension_manager.get_database())
+        e_dlg.set_available_extensions(extension_manager.get_extensions())
         if e_dlg.exec_():
             extension_manager.set_database(e_dlg.get_database())
 
