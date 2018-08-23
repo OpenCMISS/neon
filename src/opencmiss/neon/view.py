@@ -6,7 +6,7 @@ from os.path import expanduser
 from importlib import import_module
 
 from PySide2.QtCore import QSettings, QSize, QPoint
-from PySide2.QtWidgets import QMainWindow, QUndoStack, QAction, QStackedWidget, QMenu, QFileDialog
+from PySide2.QtWidgets import QMainWindow, QUndoStack, QAction, QStackedWidget, QMenu, QFileDialog, QMessageBox
 
 from opencmiss.neon.extensions_dialog import ExtensionsDialog
 from opencmiss.neon.model import Model
@@ -43,9 +43,11 @@ class MainWindow(QMainWindow):
 
     def _init_extensions(self):
         self._model.load_extensions()
+        extension_manager = self._model.get_extension_manager()
         discovered_extensions = self._model.get_discovered_extensions()
         for discovered_extension in discovered_extensions:
-            self._instantiate_extension(discovered_extension)
+            if extension_manager.is_extension_enabled(discovered_extension):
+                self._instantiate_extension(discovered_extension)
 
     def _init_project(self):
         self._file_name = None
@@ -163,10 +165,16 @@ class MainWindow(QMainWindow):
     def _show_extensions(self):
         extension_manager = self._model.get_extension_manager()
         e_dlg = ExtensionsDialog(self)
-        e_dlg.set_database(extension_manager.get_database())
+        prior_database = extension_manager.get_database()
+        e_dlg.set_database(prior_database)
         e_dlg.set_available_extensions(extension_manager.get_extensions())
         if e_dlg.exec_():
-            extension_manager.set_database(e_dlg.get_database())
+            post_database = e_dlg.get_database()
+            if post_database != prior_database:
+                QMessageBox.information(self, "Extensions changed", "The configuration of extensions has changed, "
+                                                                    "you will need to restart the application for "
+                                                                    "these changes to take effect.")
+                extension_manager.set_database(post_database)
 
     def _instantiate_extension(self, extension_description_tuple):
         extension = extension_description_tuple[0]

@@ -95,20 +95,19 @@ class ExtensionManager(object):
     def _discover_extensions(self):
         discovered_extensions = []
         for extension in self._extension_database['extensions']:
-            if self._extension_database['extensions'][extension]:
-                oc_extensions_package = import_module('opencmiss.extensions')
-                subpackages = get_subpackages(oc_extensions_package)
-                for subpackage in subpackages:
-                    imported_extension = import_module('.'.join(['opencmiss.extensions', subpackage]))
-                    classes = _get_modules_classes(imported_extension)
-                    for class_obj in classes:
-                        mro_s = inspect.getmro(class_obj)
-                        for mro in mro_s:
-                            fq_class_name = '.'.join([mro.__module__, mro.__name__])
-                            if fq_class_name == extension:
-                                discovered_extensions.append((extension, class_obj.__module__,
-                                                              class_obj.__name__, class_obj))
-                                break
+            oc_extensions_package = import_module('opencmiss.extensions')
+            subpackages = get_subpackages(oc_extensions_package)
+            for subpackage in subpackages:
+                imported_extension = import_module('.'.join(['opencmiss.extensions', subpackage]))
+                classes = _get_modules_classes(imported_extension)
+                for class_obj in classes:
+                    mro_s = inspect.getmro(class_obj)
+                    for mro in mro_s:
+                        fq_class_name = '.'.join([mro.__module__, mro.__name__])
+                        if fq_class_name == extension:
+                            discovered_extensions.append((extension, class_obj.__module__,
+                                                          class_obj.__name__, class_obj))
+                            break
 
         return discovered_extensions
 
@@ -146,3 +145,7 @@ class ExtensionManager(object):
 
     def get_extensions(self):
         return self._discovered_extensions
+
+    def is_extension_enabled(self, extension):
+        extension_module = extension[0]
+        return self._extension_database['extensions'][extension_module]
