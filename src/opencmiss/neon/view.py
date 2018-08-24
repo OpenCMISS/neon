@@ -118,8 +118,9 @@ class MainWindow(QMainWindow):
         file_menu.addAction(save_as_action)
         file_menu.addAction(open_action)
         file_menu.addMenu(recent_menu)
-        file_menu.addSeparator()
+        self._file_pre_exit_action_separator_action = file_menu.addSeparator()
         file_menu.addAction(exit_action)
+        self._file_menu = file_menu
         edit_menu = menubar.addMenu('&Edit')
         edit_menu.addAction(undo_action)
         edit_menu.addAction(redo_action)
@@ -284,6 +285,29 @@ class MainWindow(QMainWindow):
 
     def get_view_menu(self):
         return self._view_menu
+
+    def get_file_menu(self):
+        return self._file_menu
+
+    def add_import_action(self, import_action):
+        file_actions = self._file_menu.actions()
+        try:
+            import_menu_action = [action for action in file_actions if action.text() == 'Import'][0]
+        except IndexError:
+            import_menu_action = None
+
+        if import_menu_action is None:
+            import_menu = QMenu('Import')
+            self._file_menu.insertSeparator(self._file_pre_exit_action_separator_action)
+            import_menu_action = self._file_menu.insertMenu(self._file_pre_exit_action_separator_action, import_menu)
+
+        import_menu_action.menu().addAction(import_action)
+
+    def get_start_directory(self):
+        return self._start_directory
+
+    def set_start_directory(self, start_directory):
+        self._start_directory = start_directory
 
     def closeEvent(self, event):
         self._model.save_extensions()
