@@ -1,6 +1,8 @@
 
+from opencmiss.neon.extensions.handlers.base import BaseHandler
 
-class NBMDay(object):
+
+class NBMDay(BaseHandler):
 
     @staticmethod
     def instantiate(main_view, cls):

@@ -1,8 +1,10 @@
 
 from PySide2.QtWidgets import QMenu, QAction
 
+from opencmiss.neon.extensions.handlers.base import BaseHandler
 
-class AirwaysMask(object):
+
+class AirwaysMask(BaseHandler):
 
     @staticmethod
     def instantiate(main_view, cls):

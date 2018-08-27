@@ -5,9 +5,11 @@ from atomicwrites import atomic_write
 from os.path import expanduser
 from importlib import import_module
 
+from PySide2 import QtOpenGL
 from PySide2.QtCore import QSettings, QSize, QPoint
 from PySide2.QtWidgets import QMainWindow, QUndoStack, QAction, QStackedWidget, QMenu, QFileDialog, QMessageBox
 
+from opencmiss.neon.extensions.handlers.base import BaseOpenGLHandler
 from opencmiss.neon.extensions_dialog import ExtensionsDialog
 from opencmiss.neon.model import Model
 from opencmiss.neon.settings import application_name, organization_name
@@ -141,6 +143,8 @@ class MainWindow(QMainWindow):
         self._stacked_widget = QStackedWidget()
         self.setCentralWidget(self._stacked_widget)
 
+        self._one_opengl_widget_to_rule_them_all = QtOpenGL.QGLWidget()
+
         self.setWindowTitle('Neon')
 
     def _write_settings(self):
@@ -163,6 +167,7 @@ class MainWindow(QMainWindow):
         self._start_directory = settings.value("start_directory", expanduser("~"))
         settings.endGroup()
 
+    # noinspection PyCallByClass
     def _show_extensions(self):
         extension_manager = self._model.get_extension_manager()
         e_dlg = ExtensionsDialog(self)
@@ -186,7 +191,10 @@ class MainWindow(QMainWindow):
         module = import_module(module_name)
         class_ = getattr(module, class_name)
         instance = class_()
-        instance.instantiate(self, extension_description_tuple[3])
+        if issubclass(class_, BaseOpenGLHandler):
+            instance.instantiate(self, extension_description_tuple[3], self._one_opengl_widget_to_rule_them_all)
+        else:
+            instance.instantiate(self, extension_description_tuple[3])
 
     def _redo(self):
         pass
@@ -206,6 +214,7 @@ class MainWindow(QMainWindow):
     def _delete(self):
         pass
 
+    # noinspection PyCallByClass
     def _open(self):
         file_name, file_type = QFileDialog.getOpenFileName(self,
                                                            "Open Project", self._start_directory,
@@ -243,6 +252,7 @@ class MainWindow(QMainWindow):
                     print('Saving project failed.')
                     print(e)
 
+    # noinspection PyCallByClass
     def _save_as(self):
         file_name, file_type = QFileDialog.getSaveFileName(self,
                                                            "Save Project", self._start_directory,
