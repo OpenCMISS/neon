@@ -9,6 +9,8 @@ class Model(object):
     def __init__(self):
         self._extension_manager = ExtensionManager()
         self._context = Context('neon')
+        self._context.getMaterialmodule().defineStandardMaterials()
+        self._context.getGlyphmodule().defineStandardGlyphs()
 
     def load_extensions(self):
         """Load extensions found but only those that are enabled."""
