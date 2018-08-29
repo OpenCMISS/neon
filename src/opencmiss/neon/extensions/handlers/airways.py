@@ -14,6 +14,10 @@ class AirwaysMask(BaseHandler):
         main_view.register_save_pair(('airways_mask', extension.save))
         main_view.register_open_pair(('airways_mask', extension.open))
 
-        import_action = QAction('Airways Mask', main_view)
+        import_action = QAction('Analyze data', main_view)
         main_view.add_import_action(import_action)
-        import_action.triggered.connect(extension.import_airways_mask)
+        import_action.triggered.connect(extension.import_analyze_data)
+
+        main_view.register_graphics_initialized_callback('OrthographicPlus', extension.apply_scene_filters)
+
+        extension.import_analyze_data()
